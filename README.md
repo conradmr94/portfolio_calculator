@@ -19,6 +19,8 @@ The end-state of this project is the following:
 3. Activate the virtual environment:
     - On macOS and Linux: `source .venv/bin/activate`
     - On Windows: `.venv\Scripts\activate`
+4. Create `my_secrets.py` in the same directory as:
+    `POLYGON_API_TOKEN = '<your_api_token>'`
 4. Install the required dependencies: `pip install -r requirements.txt`
 
 ## Running the Program
