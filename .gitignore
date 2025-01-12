@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+secrets.py
+equal_eight_sp500.ipynb
+stock_data_*
+recommended_positions_*
+sp_500_stocks.csv

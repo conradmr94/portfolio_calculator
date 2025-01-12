@@ -1,0 +1,7 @@
+numpy
+pandas
+requests
+XlsxWriter
+tqdm
+kagglehub
+ipywidgets
