@@ -9,7 +9,7 @@ This project is a work in progress. At this time it does the following:
 ## Goals
 The end-state of this project is the following:
 1. Allow user to select stocks, indices, ETFs, etc.
-2. ALlow user to choose investment strategy
+2. Allow user to choose investment strategy
 3. Ask the user for the desired value of their portfolio
 4. Recommend a portfolio distribution based on the selected stocks and chosen strategy
 
