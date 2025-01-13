@@ -5,6 +5,8 @@ This project is a work in progress. At this time it does the following:
 1. Fetch the current S&P 500 index tickers
 2. Ask the user for the desired value of their portfolio
 3. Recommend an equally-weighted portfolio based on the portfolio value that tracks the S&P500
+4. Display portfolio distribution
+5. Allow user to download distribution as a CSV
 
 ## Goals
 The end-state of this project is the following:
