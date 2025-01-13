@@ -26,4 +26,4 @@ The end-state of this project is the following:
 4. Install the required dependencies: `pip install -r requirements.txt`
 
 ## Running the Program
-Inside your virtual environment, run: `python3 portfolio_calculator.py` and follow the terminal prompts. 
+Inside your virtual environment, run: `flask run`, which will open a browser window with the webapp.
