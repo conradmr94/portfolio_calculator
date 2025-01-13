@@ -87,6 +87,12 @@ def main():
     except ValueError:
         print("Invalid input! Please enter a numeric value.")
         return
+    
+    # Check if the portfolio size is sufficient to buy at least one share of each stock
+    min_required_portfolio = final_dataframe['Stock Price'].min() * len(final_dataframe.index)
+    if portfolio_size < min_required_portfolio:
+        print(f"Your portfolio size of ${portfolio_size:,.2f} is too small to buy at least one share of each stock.")
+        return
 
     position_size = portfolio_size / len(final_dataframe.index)
 
