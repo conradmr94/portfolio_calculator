@@ -5,10 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Portfolio Recommendation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <script>
+        function selectItem(itemId, stockSymbol) {
+            let item = document.getElementById(itemId);
+            let selectedContainer = document.getElementById("selected-items");
+
+            if (item) {
+                selectedContainer.appendChild(item);
+                item.onclick = function() { removeItem(itemId, stockSymbol); };
+                item.style.cursor = "pointer";
+                item.style.opacity = "0.7";
+
+                fetch('/select_stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock_symbol: stockSymbol })
+                }).then(response => response.json()).then(data => {
+                    console.log("Selected stocks:", data.selected_stocks);
+                }).catch(error => console.error('Error:', error));
+            }
+        }
+
+        function removeItem(itemId, stockSymbol) {
+            let item = document.getElementById(itemId);
+            let availableContainer = document.getElementById("available-items");
+
+            if (item) {
+                availableContainer.appendChild(item);
+                item.onclick = function() { selectItem(itemId, stockSymbol); };
+                item.style.cursor = "pointer";
+                item.style.opacity = "1";
+
+                fetch('/remove_stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock_symbol: stockSymbol })
+                }).then(response => response.json()).then(data => {
+                    console.log("Updated stocks:", data.selected_stocks);
+                }).catch(error => console.error('Error:', error));
+            }
+        }
+
+        function addCustomTicker() {
+            let input = document.getElementById("custom-ticker");
+            let stockSymbol = input.value.trim().toUpperCase();
+            let selectedContainer = document.getElementById("selected-items");
+            let errorMsg = document.getElementById("error-message");
+
+            if (!stockSymbol) {
+                errorMsg.innerText = "Please enter a stock ticker.";
+                return;
+            }
+
+            fetch('/select_stock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock_symbol: stockSymbol })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    errorMsg.innerText = data.error; // Show API error message
+                } else {
+                    errorMsg.innerText = ""; // Clear error message
+
+                    // Create a new stock item in the Selected Items box
+                    let newItem = document.createElement("div");
+                    newItem.id = stockSymbol;
+                    newItem.className = "clickable-item";
+                    newItem.innerText = stockSymbol;
+                    newItem.onclick = function() { removeItem(stockSymbol, stockSymbol); };
+                    newItem.style.cursor = "pointer";
+                    newItem.style.opacity = "0.7";
+                    
+                    selectedContainer.appendChild(newItem);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+            input.value = ""; // Clear input box after adding
+        }
+    </script>
+    <style>
+        .clickable-item {
+            display: inline-block;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 5px;
+            white-space: nowrap;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
         <h1>Stock Portfolio Recommendation</h1>
+        
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endif %}
+
         <p>Enter your portfolio size to get recommended stock allocations:</p>
         <form action="/recommend" method="POST">
             <div class="mb-3">
@@ -17,6 +117,44 @@
             </div>
             <button type="submit" class="btn btn-primary">Get Recommendations</button>
         </form>
+
+        <!-- Selected Items Window -->
+        <div class="mt-4">
+            <h3>Selected Items</h3>
+            <div id="selected-items" class="border p-3" style="min-height: 50px;">
+                {% for stock in selected_stocks %}
+                    <div id="{{ stock }}" class="clickable-item" 
+                        onclick="removeItem('{{ stock }}', '{{ stock }}')">
+                        {{ stock }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Custom Ticker Input -->
+        <div class="mt-4">
+            <h3>Add Custom Stock Ticker</h3>
+            <input type="text" id="custom-ticker" class="form-control mb-2" placeholder="Enter stock ticker (e.g., TSLA)">
+            <button class="btn btn-success" onclick="addCustomTicker()">Add Ticker</button>
+            <p id="error-message" class="text-danger mt-2"></p> <!-- Error message area -->
+        </div>
+
+        <!-- Available Items -->
+        <div class="mt-4">
+            <h3>Available Items</h3>
+            <div id="available-items" class="border p-3">
+                <div id="aapl" class="clickable-item" onclick="selectItem('aapl', 'AAPL')">Apple (AAPL)</div>
+                <div id="msft" class="clickable-item" onclick="selectItem('msft', 'MSFT')">Microsoft (MSFT)</div>
+                <div id="googl" class="clickable-item" onclick="selectItem('googl', 'GOOGL')">Alphabet (GOOGL)</div>
+                <div id="amzn" class="clickable-item" onclick="selectItem('amzn', 'AMZN')">Amazon (AMZN)</div>
+                <div id="tsla" class="clickable-item" onclick="selectItem('tsla', 'TSLA')">Tesla (TSLA)</div>
+                <div id="nvda" class="clickable-item" onclick="selectItem('nvda', 'NVDA')">NVIDIA (NVDA)</div>
+                <div id="meta" class="clickable-item" onclick="selectItem('meta', 'META')">Meta (META)</div>
+                <div id="brk" class="clickable-item" onclick="selectItem('brk', 'BRK.A')">Berkshire Hathaway (BRK.A)</div>
+                <div id="dell" class="clickable-item" onclick="selectItem('dell', 'DELL')">Dell (DELL)</div>
+                <div id="nflx" class="clickable-item" onclick="selectItem('nflx', 'NFLX')">Netflix (NFLX)</div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

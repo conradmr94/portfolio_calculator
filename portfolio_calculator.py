@@ -23,7 +23,8 @@ def fetch_stock_data(stock_symbols, trading_date, api_token):
         if 'results' in response and len(response['results']) > 0:
             price = response['results'][0]['c']
             volume = response['results'][0]['v']
-            market_cap = price * volume
+            # Round market capitalization to 2 decimal places
+            market_cap = round(price * volume, 2)
             stock_data.append({
                 'Ticker': symbol,
                 'Stock Price': price,
@@ -34,29 +35,42 @@ def fetch_stock_data(stock_symbols, trading_date, api_token):
 
 def redistribute_residuals(dataframe, portfolio_size):
     """Redistribute residual funds for better equal weighting."""
-    dataframe['Allocated Amount'] = dataframe['Number of Shares to Buy'] * dataframe['Stock Price']
+    # Compute allocated amount and round to 2 decimals
+    dataframe['Allocated Amount'] = (dataframe['Number of Shares to Buy'] * dataframe['Stock Price']).round(2)
     residual_funds = portfolio_size - dataframe['Allocated Amount'].sum()
 
-    dataframe['Fractional Gap'] = (portfolio_size / len(dataframe) % dataframe['Stock Price']) / dataframe['Stock Price']
-    sorted_df = dataframe.sort_values(by='Fractional Gap', ascending=False)
+    # Calculate the fractional gap only if there are residual funds
+    if residual_funds > 0:
+        dataframe['Fractional Gap'] = (portfolio_size / len(dataframe)) % dataframe['Stock Price'] / dataframe['Stock Price']
+        sorted_df = dataframe.sort_values(by='Fractional Gap', ascending=False)
 
-    for index, row in sorted_df.iterrows():
-        if residual_funds <= 0:
-            break
-        price = row['Stock Price']
-        if residual_funds >= price:
-            dataframe.at[index, 'Number of Shares to Buy'] += 1
-            residual_funds -= price
+        for index, row in sorted_df.iterrows():
+            if residual_funds <= 0:
+                break
+            price = row['Stock Price']
+            if residual_funds >= price:
+                dataframe.at[index, 'Number of Shares to Buy'] = int(dataframe.at[index, 'Number of Shares to Buy'] + 1)
+                residual_funds -= price
+
+        # Update Allocated Amount after redistribution and round it
+        dataframe['Allocated Amount'] = (dataframe['Number of Shares to Buy'] * dataframe['Stock Price']).round(2)
 
     return dataframe
 
 def calculate_portfolio_distribution(portfolio_size, stock_data, api_token):
     """Calculate the portfolio distribution based on equal weight strategy."""
-    position_size = portfolio_size / len(stock_data)
+    position_size = portfolio_size // len(stock_data)  # Ensure integer division
 
-    stock_data['Number of Shares to Buy'] = stock_data['Stock Price'].apply(lambda x: math.floor(position_size / x))
+    # Ensure Number of Shares to Buy is an integer
+    stock_data['Number of Shares to Buy'] = stock_data['Stock Price'].apply(lambda x: int(position_size // x))
+    
+    # Redistribute residual funds
     redistribute_residuals(stock_data, portfolio_size)
 
-    stock_data['Total Value'] = stock_data['Number of Shares to Buy'] * stock_data['Stock Price']
-    return stock_data
+    # Compute Total Value and round to 2 decimals
+    #stock_data['Total Value'] = (stock_data['Number of Shares to Buy'] * stock_data['Stock Price']).round(2)
 
+    if 'Fractional Gap' in stock_data.columns:
+        stock_data.drop(columns=['Fractional Gap'], inplace=True)
+        
+    return stock_data
